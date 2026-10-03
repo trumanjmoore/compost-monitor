@@ -1,0 +1,15 @@
+[package]
+name = "compost-monitor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+esp-hal = { version = "1.2.2", features = ["esp32c3", "unstable"] }
+esp-backtrace = { version = "0.20.0", features = ["esp32c3", "panic-handler", "println"] }
+esp-println = { version = "0.18.0", features = ["esp32c3", "jtag-serial"], default-features = false }
+esp-bootloader-esp-idf = { version = "0.6.0", features = ["esp32c3"] }
+embedded-hal = "1.0.0"
+critical-section = "1.2.0"
+
+[profile.release]
+opt-level = "s"

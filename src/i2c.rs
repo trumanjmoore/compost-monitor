@@ -37,8 +37,10 @@ impl<'a> I2c<'a> {
         critical_section::with(|_| {
             self.sda.set_high();
             delay.delay_us(self.delay_time);
+            delay.delay_us(2);
             self.scl.set_high();
             delay.delay_us(self.delay_time);
+            delay.delay_us(1);
             let bit = self.sda.is_high();
             self.scl.set_low();
             delay.delay_us(self.delay_time);
@@ -46,13 +48,12 @@ impl<'a> I2c<'a> {
         })
     }
 
-    pub fn read_byte(&mut self, delay: &mut Delay) -> u8 {
+    pub fn read_byte(&mut self, ack: bool, delay: &mut Delay) -> u8 {
         let mut byte : u8 = 0;
-        for i in 0..8 {
-            if self.read_bit(delay) {
-                byte |= 1 << i;
-            }
+        for _ in 0..8 {
+            byte  = (byte << 1) | (self.read_bit(delay) as u8);
         }
+        self.write_bit(!ack, delay);
         byte
     }
 
@@ -72,20 +73,23 @@ impl<'a> I2c<'a> {
         });
     }
 
-    pub fn write_byte(&mut self,  byte: &u8, delay: &mut Delay) -> () {
-        for i in 8..0 {
+    pub fn write_byte(&mut self,  byte: &u8, delay: &mut Delay) -> bool {
+        for i in (0..8).rev() {
             let bit: bool = (byte >> i) & 1 == 1;
             self.write_bit(bit, delay);
         }
+        !self.read_bit(delay)
     }
 
     pub fn write(&mut self, address: u8, data: &[u8], delay: &mut Delay) -> Result<(), ()> {
         self.start(delay);
-        if !self.write_byte(address << 1, delay) {
+        if !self.write_byte(&(address << 1), delay) {
+            self.stop(delay);
             return Err(());
         }
-        for &bytle in data {
-            if !self.write_byte(bytle, delay) {
+        for &byte in data {
+            if !self.write_byte(&byte, delay) {
+                self.stop(delay);
                 return Err(());
             }
         }
@@ -93,13 +97,15 @@ impl<'a> I2c<'a> {
         Ok(())
     }
 
-    pub fn read(&mut self, address: u8, buffer: &[u8], delay: &mut Delay) -> Result<(), ()> {
+    pub fn read(&mut self, address: u8, buffer: &mut [u8], delay: &mut Delay) -> Result<(), ()> {
         self.start(delay);
-        if !self.write_byte(address << 1, delay) {
+        if !self.write_byte(&(address << 1 | 1), delay) {
+            self.stop(delay);
             return Err(());
         }
-        for i in 8..0 {
-            buffer[i] = self.read_byte(!(i == 7), delay);
+        let buffer_length = buffer.len();
+        for i in 0..buffer_length {
+            buffer[i] = self.read_byte(!(i == buffer_length - 1), delay);
         }
         self.stop(delay);
         Ok(())

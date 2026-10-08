@@ -1,1 +1,0 @@
-C:\compost-monitor\real\compost-monitor\target\riscv32imc-unknown-none-elf\release\compost-monitor: C:\compost-monitor\real\compost-monitor\src\adastemma.rs C:\compost-monitor\real\compost-monitor\src\ds18b20.rs C:\compost-monitor\real\compost-monitor\src\i2c.rs C:\compost-monitor\real\compost-monitor\src\main.rs C:\compost-monitor\real\compost-monitor\src\onewire.rs

@@ -1,6 +1,6 @@
 use esp_hal::{
     delay::Delay,
-    gpio::{Flex, InputConfig, OutputConfig, DriveMode, Pull},
+    gpio::Flex
 };
 use embedded_hal::delay::DelayNs;
 
